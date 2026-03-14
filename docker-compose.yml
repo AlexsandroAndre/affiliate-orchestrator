@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+
+  orchestrator:
+
+    build: .
+
+    container_name: affiliate-orchestrator
+
+    volumes:
+      - .:/app
+
+    environment:
+
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      AMAZON_AFFILIATE_TAG: ${AMAZON_AFFILIATE_TAG}
+
+      WORDPRESS_URL: ${WORDPRESS_URL}
+      WORDPRESS_USER: ${WORDPRESS_USER}
+      WORDPRESS_APP_PASSWORD: ${WORDPRESS_APP_PASSWORD}
+
+    command: python main.py

@@ -1,31 +1,45 @@
 from services.keyword_service import generate_keywords
 from services.cluster_service import build_clusters
-from services.amazon_scraper_service import scrape_products
+from services.amazon_scraper_service import  scrape_amazon_products
 from services.amazon_affiliate_service import add_affiliate
 from services.ai_article_service import generate_article
 from services.wordpress_service import publish
 from templates.pillar_template import render_pillar
 
-def run(seed):
+def run(seeds, post_limit):
 
-    keywords = generate_keywords(seed)
+    count = 0
 
-    clusters = build_clusters(keywords)
+    for seed in seeds:
 
-    for cluster in clusters:
+        keywords = generate_keywords(seed)
 
-        products = scrape_products(cluster)
+        clusters = build_clusters(keywords)
 
-        products = add_affiliate(products)
+        for cluster in clusters:
 
-        pillar_text = generate_article(cluster, "pillar")
+            if count >= post_limit:
+                return
 
-        pillar = render_pillar(pillar_text, products)
+            products = scrape_amazon_products(cluster)
 
-        publish(cluster, pillar)
+            products = add_affiliate(products)
 
-        for kw in clusters[cluster]:
+            pillar_text = generate_article(cluster, "pillar")
 
-            article = generate_article(kw, "support")
+            pillar = render_pillar(pillar_text, products)
 
-            publish(kw, article)
+            publish(cluster, pillar)
+
+            count += 1
+
+            for kw in clusters[cluster]:
+
+                if count >= post_limit:
+                    return
+
+                article = generate_article(kw, "support")
+
+                publish(kw, article)
+
+                count += 1

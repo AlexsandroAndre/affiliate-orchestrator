@@ -4,7 +4,12 @@ def build_clusters(keywords):
 
     for kw in keywords:
 
-        root = kw.split()[0]
+        words = kw.split()
+
+        if len(words) >= 2:
+            root = " ".join(words[:2])
+        else:
+            root = kw
 
         clusters.setdefault(root, []).append(kw)
 

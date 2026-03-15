@@ -1,4 +1,6 @@
 from orchestrator.pipeline import run
+from config.settings import POST_LIMIT
+
 
 def main():
 
@@ -7,9 +9,8 @@ def main():
         "standing desk"
     ]
 
-    for seed in seeds:
+    run(seeds, POST_LIMIT)
 
-        run(seed)
 
 if __name__ == "__main__":
     main()

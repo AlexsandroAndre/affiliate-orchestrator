@@ -1,31 +1,57 @@
-import requests
-from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
-def scrape_products(keyword):
+
+def scrape_amazon_products(keyword):
 
     url = f"https://www.amazon.com/s?k={keyword.replace(' ','+')}"
 
-    headers = {"User-Agent": "Mozilla/5.0"}
-
-    r = requests.get(url, headers=headers)
-
-    soup = BeautifulSoup(r.text, "html.parser")
-
     products = []
 
-    results = soup.select(".s-result-item")[:5]
+    with sync_playwright() as p:
 
-    for item in results:
+        browser = p.chromium.launch(headless=True)
 
-        title = item.select_one("h2")
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+        )
 
-        link = item.select_one("a")
+        page = context.new_page()
 
-        if title and link:
+        page.goto(url)
+
+        page.wait_for_selector("div[data-component-type='s-search-result']")
+        page.wait_for_timeout(2000)
+
+        items = page.query_selector_all("div[data-component-type='s-search-result']")
+
+        for item in items:
+
+            asin = item.get_attribute("data-asin")
+            if not asin:
+                continue
+
+            title_el = item.query_selector("h2 span")
+            price_el = item.query_selector("span.a-price span.a-offscreen")
+            rating_el = item.query_selector("span.a-icon-alt")
+
+            if not title_el:
+                continue
+
+            title = title_el.inner_text().strip()
+            price = price_el.inner_text() if price_el else "N/A"
+            rating = rating_el.inner_text() if rating_el else "N/A"
 
             products.append({
-                "title": title.text.strip(),
-                "url": "https://www.amazon.com" + link["href"]
+                "title": title,
+                "price": price,
+                "rating": rating,
+                "url": f"https://www.amazon.com/dp/{asin}"
             })
+
+            if len(products) == 5:
+                break
+
+
+        browser.close()
 
     return products
